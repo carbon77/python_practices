@@ -6,13 +6,8 @@ class VM:
         self.stack = []
         self.code = []
         self.scope = {
-            'main': {
-                'type': 'func',
-                'called_by': None,
-                'scope': {}
-            }
+            '__parent__': None
         }
-        self.current_call = 'main'
         self.entry = code[0]
 
         for byte in code[1:]:
@@ -44,42 +39,33 @@ class VM:
 
             elif op == 'is':
                 self.scope[arg] = {
-                    'type': 'func',
-                    'called_by': None,
-                    'scope': {}
+                    '__parent__': self.scope
                 }
 
             elif op == 'call':
-                scope = self.scope[arg]
+                env = self.scope
+                called = env.get(arg)
 
-                if scope['type'] == 'func':
-                    value = arg
-                    scope['called_by'] = self.current_call
-                    self.current_call = value
-                    self.run(value)
+                while called is None and env['__parent__'] is not None:
+                    env = env.get('__parent__')
+                    called = env.get(arg)
 
-                elif scope['type'] == 'var':
-                    value = scope['value']
-                    func = scope['func']
-                    call = self.current_call
+                if called is None:
+                    raise ValueError("Name does not exist")
 
-                    while call is not None and func != call:
-                        call = self.scope[call]['called_by']
-
-                    if call is None:
-                        raise ValueError('This variable doesn\'t exist in this scope')
-
-                    self.stack.append(value)
+                if type(called) is dict:
+                    self.scope = called
+                    self.run(arg)
+                else:
+                    self.stack.append(called)
 
             elif op == 'to':
                 value = self.stack.pop()
-                self.scope[self.current_call]['scope'] = {
-                    'type': 'var',
-                    'value': value
-                }
+                self.scope[arg] = value
 
             elif op == 'exit':
-                self.current_call = self.scope[self.current_call]['called_by']
+                if self.scope['__parent__'] is not None:
+                    self.scope = self.scope.get('__parent__')
                 break
 
             pc += 1
