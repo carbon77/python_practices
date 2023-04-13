@@ -1,6 +1,6 @@
 from queue import Queue
 
-from pract4.graph.svg import SVG
+from pract4.tree.svg import SVG
 
 
 class Tree:
@@ -9,7 +9,7 @@ class Tree:
         self.nodes = nodes
         self.x = 0
         self.y = 0
-        self.scale_x = 15
+        self.scale_x = 30
         self.scale_y = 50
 
     def init_cords(self, x_left=0.0, y=0):
@@ -20,17 +20,22 @@ class Tree:
             return self.x, self.x
 
         rights = [x_left]
-        xs = []
+        child_xs = []
 
         for node in self.nodes:
-            right, x = node.init_cords(rights[-1] + self.scale_x, self.y + 1)
-            rights.append(right)
-            xs.append(x)
+            next_right = rights[-1]
 
-        if len(xs) == 1:
-            self.x = xs[0]
+            if node != self.nodes[0]:
+                next_right += self.scale_x
+
+            right, child_x = node.init_cords(next_right, self.y + 1)
+            rights.append(right)
+            child_xs.append(child_x)
+
+        if len(child_xs) == 1:
+            self.x = child_xs[0]
         else:
-            self.x = xs[0] + (xs[-1] - xs[0]) / 2
+            self.x = child_xs[0] + (child_xs[-1] - child_xs[0]) / 2
 
         return rights[-1], self.x
 
@@ -64,4 +69,5 @@ if __name__ == '__main__':
     tree_8 = Tree(8, Tree(9, Tree(10), Tree(11, Tree(12), Tree(13))), Tree(14))
     tree_1 = Tree(1, tree_2, tree_8)
     tree = Tree(1, tree_1, Tree(3, Tree(1, Tree(1, Tree(2), Tree(1), Tree(5)))), Tree(1, Tree(3), Tree(3)))
+    # tree = Tree(1, tree_1, Tree(1, Tree(1, Tree(1, Tree(1, Tree(1, Tree(1, Tree(1))))))))
     tree.print('tree2.svg')

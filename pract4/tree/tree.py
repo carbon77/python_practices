@@ -1,6 +1,6 @@
 from queue import Queue
 
-from pract4.graph.svg import SVG
+from pract4.tree.svg import SVG
 
 
 class Tree:
